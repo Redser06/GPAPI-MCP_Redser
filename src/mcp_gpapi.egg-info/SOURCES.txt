@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+src/mcp_gpapi.egg-info/PKG-INFO
+src/mcp_gpapi.egg-info/SOURCES.txt
+src/mcp_gpapi.egg-info/dependency_links.txt
+src/mcp_gpapi.egg-info/requires.txt
+src/mcp_gpapi.egg-info/top_level.txt

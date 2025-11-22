@@ -1,0 +1,12 @@
+mcp
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+
+[dev]
+black
+isort
+mypy
+pytest
