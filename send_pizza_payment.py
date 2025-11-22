@@ -21,10 +21,12 @@ async def main():
             print("Calling send_payment_link...")
             try:
                 result = await session.call_tool("send_payment_link", {
-                    "amount": 15.99,
-                    "currency": "USD",
-                    "description": "2 pizzas with pepperoni and a coke",
-                    "reference": "PIZZA-ORDER-001"
+                    "params": {
+                        "amount": 15.99,
+                        "currency": "USD",
+                        "description": "2 pizzas with pepperoni and a coke",
+                        "reference": "PIZZA-ORDER-001"
+                    }
                 })
                 print("Result:", result)
             except Exception as e:

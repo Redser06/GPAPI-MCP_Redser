@@ -42,11 +42,11 @@ async def send_payment_link(params: PaymentLinkRequest):
     Create a payment link for a customer.
     
     Args:
-        amount: Payment amount in dollars (e.g., 15.99)
-        currency: Currency code (e.g., "USD") 
-        description: Payment description
-        reference: Optional unique reference
-        name: Optional link name
+        params.amount: Payment amount in dollars (e.g., 15.99)
+        params.currency: Currency code (e.g., "USD") 
+        params.description: Payment description
+        params.reference: Optional unique reference
+        params.name: Optional link name
         
     Returns:
         Payment link URL and details
@@ -60,17 +60,17 @@ async def send_payment_link(params: PaymentLinkRequest):
     )
 
 @server.tool()
-async def get_payment_link(link_id: str):
+async def get_payment_link(params: dict):
     """
     Retrieve payment link details.
     
     Args:
-        link_id: Payment link ID
+        params.link_id: Payment link ID
         
     Returns:
         Payment link details including status
     """
-    return await links.get_payment_link(link_id)
+    return await links.get_payment_link(params["link_id"])
 
 @server.tool()
 async def list_payment_links(params: PaymentLinkListRequest):
@@ -78,10 +78,10 @@ async def list_payment_links(params: PaymentLinkListRequest):
     List payment links with optional filters.
     
     Args:
-        from_time: Optional start timestamp (ISO 8601)
-        to_time: Optional end timestamp (ISO 8601)
-        page: Page number (default: 1)
-        page_size: Results per page (default: 10)
+        params.from_time: Optional start timestamp (ISO 8601)
+        params.to_time: Optional end timestamp (ISO 8601)
+        params.page: Page number (default: 1)
+        params.page_size: Results per page (default: 10)
         
     Returns:
         List of payment links
