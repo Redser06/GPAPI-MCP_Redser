@@ -11,10 +11,14 @@ load_dotenv()
 from src.auth import TokenManager
 from src.capabilities.links import LinksCapability
 from src.capabilities.transactions import TransactionCapability
+from src.capabilities.tokens import TokenCapability
+from src.capabilities.authentication import AuthenticationCapability
+from src.capabilities.risk import RiskCapability
 from src.models import PaymentRequest, PaymentLinkRequest, PaymentLinkListRequest
 from src.models.transaction import (
     SaleRequest, RefundRequest, CaptureRequest, VoidRequest, TransactionListRequest
 )
+from src.models.token import TokenRequest, TokenUpdateRequest, TokenListRequest
 
 # Initialize server
 server = FastMCP("mcp-gpapi")
@@ -23,8 +27,12 @@ server = FastMCP("mcp-gpapi")
 auth_manager = TokenManager()
 
 # Initialize capabilities
+# Initialize capabilities
 links = LinksCapability(auth_manager)
 transactions = TransactionCapability(auth_manager)
+tokens = TokenCapability(auth_manager)
+authentication = AuthenticationCapability(auth_manager)
+risk = RiskCapability(auth_manager)
 
 # Register tools
 
@@ -165,6 +173,143 @@ async def list_transactions(params: TransactionListRequest):
         order_by=params.order_by,
         order=params.order,
         status=params.status
+    )
+
+## Tokenization Tools
+@server.tool()
+async def create_token(params: TokenRequest):
+    """
+    Create a payment token (store payment method).
+    
+    Args:
+        params.payment_method: Card details
+        params.description: Optional description
+        params.customer_id: Optional customer ID
+        params.usage_mode: "SINGLE" or "MULTIPLE"
+        
+    Returns:
+        Token details
+    """
+    return await tokens.create_token(
+        payment_method=params.payment_method,
+        description=params.description,
+        customer_id=params.customer_id,
+        usage_mode=params.usage_mode
+    )
+
+@server.tool()
+async def get_token(params: dict):
+    """
+    Get token details.
+    
+    Args:
+        params.token_id: Token ID
+        
+    Returns:
+        Token details
+    """
+    return await tokens.get_token(params["token_id"])
+
+@server.tool()
+async def delete_token(params: dict):
+    """
+    Delete a token.
+    
+    Args:
+        params.token_id: Token ID
+        
+    Returns:
+        Deletion confirmation
+    """
+    return await tokens.delete_token(params["token_id"])
+
+@server.tool()
+async def update_token(params: dict):
+    """
+    Update a token.
+    
+    Args:
+        params.token_id: Token ID
+        params.description: Optional description
+        params.customer_id: Optional customer ID
+        params.expiry_month: Optional expiry month
+        params.expiry_year: Optional expiry year
+        
+    Returns:
+        Updated token details
+    """
+    return await tokens.update_token(
+        token_id=params["token_id"],
+        description=params.get("description"),
+        customer_id=params.get("customer_id"),
+        expiry_month=params.get("expiry_month"),
+        expiry_year=params.get("expiry_year")
+    )
+
+@server.tool()
+async def list_tokens(params: TokenListRequest):
+    """
+    List stored tokens.
+    
+    Args:
+        params.page: Page number
+        params.page_size: Results per page
+        params.customer_id: Filter by customer
+        
+    Returns:
+        List of tokens
+    """
+    return await tokens.list_tokens(
+        page=params.page,
+        page_size=params.page_size,
+        customer_id=params.customer_id,
+        from_time=params.from_time,
+        to_time=params.to_time
+    )
+
+## Authentication & Risk Tools
+@server.tool()
+async def initiate_authentication(params: dict):
+    """
+    Initiate 3DS authentication.
+    
+    Args:
+        params.amount: Amount in dollars
+        params.currency: Currency code
+        params.payment_method: Card details
+        params.reference: Optional reference
+        
+    Returns:
+        Authentication response
+    """
+    return await authentication.initiate_authentication(
+        amount=params["amount"],
+        currency=params["currency"],
+        payment_method=params["payment_method"],
+        reference=params.get("reference"),
+        country=params.get("country", "US")
+    )
+
+@server.tool()
+async def assess_risk(params: dict):
+    """
+    Perform risk assessment.
+    
+    Args:
+        params.amount: Amount in dollars
+        params.currency: Currency code
+        params.payment_method: Card details
+        params.reference: Optional reference
+        
+    Returns:
+        Risk assessment
+    """
+    return await risk.assess_risk(
+        amount=params["amount"],
+        currency=params["currency"],
+        payment_method=params["payment_method"],
+        reference=params.get("reference"),
+        country=params.get("country", "US")
     )
 
 ## Payment Links
