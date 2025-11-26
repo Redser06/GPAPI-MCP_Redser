@@ -84,6 +84,12 @@ python -m src.main
 - `initiate_authentication(amount, currency, payment_method, ...)`
 - `assess_risk(amount, currency, payment_method, ...)`
 
+#### Disputes
+- `list_disputes(page, page_size, status, ...)`
+- `get_dispute(dispute_id)`
+- `accept_dispute(dispute_id)`
+- `challenge_dispute(dispute_id, evidence_text, ...)`
+
 ## Development
 
 ### Project Structure

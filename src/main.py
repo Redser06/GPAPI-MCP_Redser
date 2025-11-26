@@ -14,11 +14,15 @@ from src.capabilities.transactions import TransactionCapability
 from src.capabilities.tokens import TokenCapability
 from src.capabilities.authentication import AuthenticationCapability
 from src.capabilities.risk import RiskCapability
+from src.capabilities.disputes import DisputeCapability
+from src.capabilities.settlements import SettlementCapability
 from src.models import PaymentRequest, PaymentLinkRequest, PaymentLinkListRequest
 from src.models.transaction import (
     SaleRequest, RefundRequest, CaptureRequest, VoidRequest, TransactionListRequest
 )
 from src.models.token import TokenRequest, TokenUpdateRequest, TokenListRequest
+from src.models.dispute import DisputeListRequest, DisputeChallengeRequest
+from src.models.settlement import SettlementListRequest
 
 # Initialize server
 server = FastMCP("mcp-gpapi")
@@ -33,6 +37,8 @@ transactions = TransactionCapability(auth_manager)
 tokens = TokenCapability(auth_manager)
 authentication = AuthenticationCapability(auth_manager)
 risk = RiskCapability(auth_manager)
+disputes = DisputeCapability(auth_manager)
+settlements = SettlementCapability(auth_manager)
 
 # Register tools
 
@@ -310,6 +316,73 @@ async def assess_risk(params: dict):
         payment_method=params["payment_method"],
         reference=params.get("reference"),
         country=params.get("country", "US")
+    )
+
+## Operational Tools (Disputes & Settlements)
+@server.tool()
+async def list_disputes(params: DisputeListRequest):
+    """
+    List disputes.
+    
+    Args:
+        params.page: Page number
+        params.page_size: Results per page
+        params.status: Filter by status
+        
+    Returns:
+        List of disputes
+    """
+    return await disputes.list_disputes(
+        page=params.page,
+        page_size=params.page_size,
+        from_time=params.from_time,
+        to_time=params.to_time,
+        status=params.status
+    )
+
+@server.tool()
+async def get_dispute(params: dict):
+    """
+    Get dispute details.
+    
+    Args:
+        params.dispute_id: Dispute ID
+        
+    Returns:
+        Dispute details
+    """
+    return await disputes.get_dispute(params["dispute_id"])
+
+@server.tool()
+async def accept_dispute(params: dict):
+    """
+    Accept a dispute (admit liability).
+    
+    Args:
+        params.dispute_id: Dispute ID
+        
+    Returns:
+        Result of acceptance
+    """
+    return await disputes.accept_dispute(params["dispute_id"])
+
+@server.tool()
+async def challenge_dispute(params: dict):
+    """
+    Challenge a dispute.
+    
+    Args:
+        params.dispute_id: Dispute ID
+        params.evidence_text: Textual evidence
+        params.documents: List of document IDs
+        
+    Returns:
+        Result of challenge
+    """
+    return await disputes.challenge_dispute(
+        dispute_id=params["dispute_id"],
+        evidence_text=params.get("evidence_text"),
+        documents=params.get("documents")
     )
 
 ## Payment Links

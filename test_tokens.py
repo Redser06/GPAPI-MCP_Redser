@@ -30,6 +30,24 @@ async def main():
             except Exception as e:
                 print(f"Error listing tokens: {e}")
 
+            print("\n--- Testing Create Token ---")
+            try:
+                result = await session.call_tool("create_token", {
+                    "params": {
+                        "payment_method": {
+                            "card_number": "4622943123052970",
+                            "expiry_month": "10",
+                            "expiry_year": "2027",
+                            "cvn": "123"
+                        },
+                        "usage_mode": "MULTIPLE",
+                        "description": "User Test Token"
+                    }
+                })
+                print("Create Token Result:", result)
+            except Exception as e:
+                print(f"Error creating token: {e}")
+
             print("\n--- Testing Risk Assessment ---")
             try:
                 result = await session.call_tool("assess_risk", {

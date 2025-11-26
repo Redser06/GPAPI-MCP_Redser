@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import MagicMock, patch, AsyncMock
 from src.capabilities.transactions import TransactionCapability
 from src.capabilities.tokens import TokenCapability
+from src.capabilities.disputes import DisputeCapability
+from src.capabilities.settlements import SettlementCapability
 from src.auth.token_manager import TokenManager
 
 class TestTransactionCapability(unittest.IsolatedAsyncioTestCase):
@@ -60,6 +62,47 @@ class TestTokenCapability(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payload["type"], "PAYMENT_METHOD")
         self.assertEqual(payload["usage_mode"], "MULTIPLE")
         self.assertEqual(payload["customer_id"], "CUST_001")
+
+class TestDisputeCapability(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.mock_auth = MagicMock(spec=TokenManager)
+        self.disputes = DisputeCapability(self.mock_auth)
+        self.disputes._make_request = MagicMock(return_value={"status": "success"})
+
+    async def test_challenge_dispute_payload(self):
+        await self.disputes.challenge_dispute(
+            dispute_id="DSP_123",
+            evidence_text="This charge is valid.",
+            documents=["DOC_1", "DOC_2"]
+        )
+        
+        self.disputes._make_request.assert_called_once()
+        args, kwargs = self.disputes._make_request.call_args
+        self.assertEqual(args[0], "POST")
+        self.assertEqual(args[1], "/ucp/disputes/DSP_123/challenge")
+        
+        payload = kwargs["data"]
+        self.assertEqual(payload["evidence_text"], "This charge is valid.")
+        self.assertEqual(payload["documents"], ["DOC_1", "DOC_2"])
+
+class TestSettlementCapability(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.mock_auth = MagicMock(spec=TokenManager)
+        self.settlements = SettlementCapability(self.mock_auth)
+        self.settlements._make_request = MagicMock(return_value={"status": "success"})
+
+    async def test_list_settlements_params(self):
+        await self.settlements.list_settlements(
+            page=2,
+            from_time="2023-01-01T00:00:00Z"
+        )
+        
+        self.settlements._make_request.assert_called_once()
+        _, kwargs = self.settlements._make_request.call_args
+        params = kwargs["params"]
+        self.assertEqual(params["page"], 2)
+        self.assertEqual(params["from_time_created"], "2023-01-01T00:00:00Z")
+        # self.assertEqual(params["order_by"], "TIME_CREATED")  # Removed default sort
 
 if __name__ == "__main__":
     unittest.main()
